@@ -1,0 +1,303 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Heat Map | Urban Heat AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <i class="bi bi-leaf-fill brand-icon"></i>
+            <span>Urban Heat AI</span>
+        </div>
+
+        <div class="sidebar-label">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('main.home') }}" class="nav-link">
+                <i class="bi bi-grid-1x2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('main.heat_map') }}"
+               class="nav-link active">
+                <i class="bi bi-map"></i>
+                <span>Heat Map</span>
+            </a>
+
+            <a href="{{ url_for('main.area_analysis') }}"
+               class="nav-link">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Area Analysis</span>
+            </a>
+
+            <a href="{{ url_for('main.predictions') }}"
+               class="nav-link">
+                <i class="bi bi-cpu"></i>
+                <span>AI Predictions</span>
+            </a>
+
+            <a href="{{ url_for('main.recommendations') }}"
+               class="nav-link">
+                <i class="bi bi-lightbulb"></i>
+                <span data-i18n="recommendations">Recommendations</span>
+            </a>
+
+            <a href="{{ url_for('main.reports') }}"
+               class="nav-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-label">SYSTEM</div>
+
+            <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+
+            <div class="project-version">
+                Urban Heat AI v1.0
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h2>Urban Heat Map</h2>
+                <p>Explore neighbourhood heat-risk locations.</p>
+            </div>
+        </header>
+
+
+        <!-- CITY SELECTOR -->
+        <section class="location-section">
+
+            <div>
+                <span class="section-label">SELECTED CITY</span>
+
+                <h3>
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ selected_city }}, Maharashtra
+                </h3>
+
+                <p>Interactive neighbourhood heat-risk visualization</p>
+            </div>
+
+            <select class="control-select"
+                    onchange="window.location.href='/heat-map?city=' + encodeURIComponent(this.value)">
+
+                {% for city in cities %}
+                <option value="{{ city }}"
+                    {% if city == selected_city %}selected{% endif %}>
+                    {{ city }}
+                </option>
+                {% endfor %}
+
+            </select>
+
+        </section>
+
+
+        <!-- MAP LEGEND -->
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-info-circle"></i>
+                        Heat Risk Legend
+                    </h3>
+                    <p>Meaning of the map marker colours</p>
+                </div>
+
+                <span class="status-tag">DEMONSTRATION RISK DATA</span>
+            </div>
+
+            <div style="display:flex;gap:30px;flex-wrap:wrap;">
+
+                <div>
+                    <span style="color:#dc3545;">●</span>
+                    <strong>High Risk</strong>
+                </div>
+
+                <div>
+                    <span style="color:#fd9d24;">●</span>
+                    <strong>Medium Risk</strong>
+                </div>
+
+                <div>
+                    <span style="color:#198754;">●</span>
+                    <strong>Low Risk</strong>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- INTERACTIVE MAP -->
+        <section class="content-card">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-map"></i>
+                        {{ selected_city }} Heat Map
+                    </h3>
+
+                    <p>
+                        Click a marker to view neighbourhood information.
+                    </p>
+                </div>
+
+                <span class="status-tag">INTERACTIVE MAP</span>
+            </div>
+
+            <div class="interactive-map">
+                {{ map_html | safe }}
+            </div>
+
+        </section>
+
+
+        <!-- AREA TABLE -->
+        <section class="content-card" style="margin-top:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>Neighbourhood Heat Information</h3>
+                    <p>Weather observations and demonstration risk classifications</p>
+                </div>
+
+                <i class="bi bi-table"></i>
+            </div>
+
+            <div style="overflow-x:auto;">
+
+                <table class="table align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>Neighbourhood</th>
+                            <th>Temperature</th>
+                            <th>Feels Like</th>
+                            <th>Humidity</th>
+                            <th>Wind Speed</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for area in locations %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ area.name }}</strong>
+                            </td>
+
+                            <!-- TEMPERATURE -->
+                            <td>
+                                {% if area.live_temp is not none %}
+                                    <strong>{{ area.live_temp }}°C</strong>
+                                    <span class="text-success">(Live)</span>
+                                {% else %}
+                                    {{ area.temp }}°C
+                                    <span class="text-secondary">(Sample)</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- FEELS LIKE -->
+                            <td>
+                                {% if area.weather.is_live %}
+                                    {{ area.weather.feels_like }}°C
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <!-- HUMIDITY -->
+                            <td>
+                                {% if area.weather.is_live %}
+                                    {{ area.weather.humidity }}%
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <!-- WIND SPEED -->
+                            <td>
+                                {% if area.weather.is_live %}
+                                    {{ area.weather.wind_speed }} km/h
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+
+                            <!-- RISK LEVEL -->
+                            <td>
+
+                                {% if area.risk == "High" %}
+                                    <span class="badge bg-danger">
+                                        High Risk
+                                    </span>
+
+                                {% elif area.risk == "Medium" %}
+                                    <span class="badge bg-warning text-dark">
+                                        Medium Risk
+                                    </span>
+
+                                {% else %}
+                                    <span class="badge bg-success">
+                                        Low Risk
+                                    </span>
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p style="font-size:12px;color:#8290a5;">
+                Weather observations are fetched from Open-Meteo when available.
+                Risk classifications are demonstration labels and are not
+                validated real-world heat-risk predictions.
+            </p>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            Urban Heat AI © 2026 · Climate Intelligence Platform
+        </footer>
+
+    </main>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,594 @@
+
+{% extends "base.html" %}
+
+{% block title %}Area Analysis | Urban Heat AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <i class="bi bi-leaf-fill brand-icon"></i>
+            <span>Urban Heat AI</span>
+        </div>
+
+        <div class="sidebar-label">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('main.home') }}" class="nav-link">
+    <i class="bi bi-grid-1x2"></i>
+    <span>Dashboard</span>
+</a>
+
+            <a href="/?city={{ selected_city }}" class="nav-link">
+                <i class="bi bi-map"></i>
+                <span>Heat Map</span>
+            </a>
+
+            <a href="/area-analysis?city={{ selected_city }}"
+               class="nav-link active">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Area Analysis</span>
+            </a>
+
+            <a href="{{ url_for('main.predictions') }}" class="nav-link">
+    <i class="bi bi-cpu"></i>
+    <span>AI Predictions</span>
+</a>
+
+            <a href="{{ url_for('main.recommendations') }}" class="nav-link">
+    <i class="bi bi-lightbulb"></i>
+    <span data-i18n="recommendations">Recommendations</span>
+</a>
+
+            <a href="{{ url_for('main.reports') }}" class="nav-link">
+    <i class="bi bi-file-earmark-text"></i>
+    <span>Reports</span>
+</a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-label">SYSTEM</div>
+
+            <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+
+            <div class="project-version">
+                Urban Heat AI v1.0
+            </div>
+
+        </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div>
+                <h2>Area Analysis</h2>
+                <p>Explore neighbourhood-level heat information.</p>
+            </div>
+
+        </header>
+
+        <!-- CITY SELECTION -->
+        <section class="location-section">
+
+            <div>
+
+                <span class="section-label">SELECTED CITY</span>
+
+                <h3>
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ selected_city }}, Maharashtra
+                </h3>
+
+                <p>
+                    Neighbourhood comparison and heat-risk analysis
+                </p>
+
+            </div>
+
+            <select class="control-select"
+                    onchange="window.location.href='/area-analysis?city=' + encodeURIComponent(this.value)">
+
+                {% for city in cities %}
+
+                    <option value="{{ city }}"
+                        {% if city == selected_city %}selected{% endif %}>
+                        {{ city }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </section>
+
+        <!-- NEIGHBOURHOOD OVERVIEW -->
+        <section class="content-card"
+                 style="margin-bottom:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-clipboard-data"></i>
+                        Neighbourhood Overview
+                    </h3>
+
+                    <p>
+                        Demonstration area-level dataset
+                    </p>
+                </div>
+
+                <span class="status-tag">
+                    SAMPLE DATA
+                </span>
+
+            </div>
+
+            <div class="stats-grid">
+
+                <!-- TOTAL AREAS -->
+                <div class="stat-card">
+
+                    <div class="stat-heading">
+                        Total Areas
+                        <i class="bi bi-geo"></i>
+                    </div>
+
+                    <h2>{{ locations|length }}</h2>
+
+                    <p>Areas currently listed</p>
+
+                </div>
+
+                <!-- HIGH RISK -->
+                <div class="stat-card">
+
+                    <div class="stat-heading">
+                        High Risk
+                        <i class="bi bi-fire"></i>
+                    </div>
+
+                    <h2>{{ high_count }}</h2>
+
+                    <p>Sample high-risk locations</p>
+
+                </div>
+
+                <!-- MEDIUM RISK -->
+                <div class="stat-card">
+
+                    <div class="stat-heading">
+                        Medium Risk
+                        <i class="bi bi-exclamation-circle"></i>
+                    </div>
+
+                    <h2>{{ medium_count }}</h2>
+
+                    <p>Sample medium-risk locations</p>
+
+                </div>
+
+                <!-- LOW RISK -->
+                <div class="stat-card">
+
+                    <div class="stat-heading">
+                        Low Risk
+                        <i class="bi bi-check-circle"></i>
+                    </div>
+
+                    <h2>{{ low_count }}</h2>
+
+                    <p>Sample low-risk locations</p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- NEIGHBOURHOOD COMPARISON TABLE -->
+        <section class="content-card">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        Neighbourhood Risk Comparison
+                    </h3>
+
+                    <p>
+                        Click a neighbourhood to explore its details.
+                    </p>
+                </div>
+
+                <i class="bi bi-table"></i>
+
+            </div>
+
+            <div style="overflow-x:auto;">
+
+                <table class="table align-middle">
+
+                    <thead>
+    <tr>
+        <th>Neighbourhood</th>
+        <th>Sample Temperature</th>
+        <th>Live Temperature</th>
+        <th>Heat Risk</th>
+        <th>Risk Status</th>
+    </tr>
+</thead>
+
+                    <tbody>
+
+                        {% for area in locations %}
+
+                        <tr
+                            style="cursor:pointer;"
+                            onclick="window.location.href='/area-analysis?city={{ selected_city|urlencode }}&area={{ area.name|urlencode }}'"
+                        >
+
+                            <td>
+                                <strong>{{ area.name }}</strong>
+                                <i class="bi bi-arrow-up-right-circle ms-2"></i>
+                            </td>
+
+                            <td>{{ area.temp }}°C</td>
+
+<td>
+    {% if area.live_temp is not none %}
+        <strong class="text-success">{{ area.live_temp }}°C</strong>
+    {% else %}
+        <span class="text-muted">Unavailable</span>
+    {% endif %}
+</td>
+
+                            <td>
+                                {{ area.risk }}
+                            </td>
+
+                            <td>
+
+                                {% if area.risk == "High" %}
+
+                                    <span class="badge bg-danger">
+                                        High Risk
+                                    </span>
+
+                                {% elif area.risk == "Medium" %}
+
+                                    <span class="badge bg-warning text-dark">
+                                        Medium Risk
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="badge bg-success">
+                                        Low Risk
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            <p style="font-size:12px;color:#8290a5;margin-top:15px;">
+                Note: Neighbourhood temperatures and risk classifications
+                are demonstration values, not actual sensor measurements.
+            </p>
+
+        </section>
+
+        <!-- SELECTED NEIGHBOURHOOD DETAILS -->
+        {% if selected_area %}
+
+        <section class="content-card"
+                 style="margin-top:24px;">
+
+            <!-- AREA HEADING -->
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-geo-alt-fill"></i>
+                        {{ selected_area.name }} — Area Details
+                    </h3>
+
+                    <p>
+                        Neighbourhood-level demonstration analysis
+                    </p>
+                </div>
+
+                <span class="status-tag">
+                    SAMPLE DATA
+                </span>
+
+            </div>
+
+            <!-- AREA STATISTICS -->
+            <!-- LIVE WEATHER AND AREA STATISTICS -->
+
+<div class="stats-grid">
+
+ <!-- LIVE TEMPERATURE -->
+<td>
+    {% if area.live_temp is not none %}
+        <strong>{{ area.live_temp }}°C</strong>
+        <span style="color:#10b981;">(Live)</span>
+    {% else %}
+        Unavailable
+    {% endif %}
+</td>
+
+<!-- SAMPLE TEMPERATURE -->
+<td>
+    {{ area.temp }}°C
+    <span class="text-muted">(Sample)</span>
+</td>
+
+<!-- HEAT RISK -->
+<td>
+    {{ area.risk }}
+</td>
+
+    <!-- FEELS LIKE -->
+    <div class="stat-card">
+        <div class="stat-heading">
+            Feels Like
+            <i class="bi bi-thermometer-sun"></i>
+        </div>
+
+        {% if weather and weather.is_live %}
+            <h2>{{ weather.feels_like }}°C</h2>
+            <p>Apparent temperature</p>
+        {% else %}
+            <h2>--</h2>
+            <p>Weather information unavailable</p>
+        {% endif %}
+    </div>
+
+    <!-- HUMIDITY -->
+    <div class="stat-card">
+        <div class="stat-heading">
+            Humidity
+            <i class="bi bi-droplet"></i>
+        </div>
+
+        {% if weather and weather.is_live %}
+            <h2>{{ weather.humidity }}%</h2>
+            <p>Relative humidity</p>
+        {% else %}
+            <h2>--</h2>
+            <p>Weather information unavailable</p>
+        {% endif %}
+    </div>
+
+    <!-- WIND SPEED -->
+    <div class="stat-card">
+        <div class="stat-heading">
+            Wind Speed
+            <i class="bi bi-wind"></i>
+        </div>
+
+        {% if weather and weather.is_live %}
+            <h2>{{ weather.wind_speed }} km/h</h2>
+            <p>Current wind speed</p>
+        {% else %}
+            <h2>--</h2>
+            <p>Weather information unavailable</p>
+        {% endif %}
+    </div>
+
+    <!-- HEAT RISK -->
+    <div class="stat-card">
+        <div class="stat-heading">
+            Heat Risk
+            <i class="bi bi-exclamation-triangle"></i>
+        </div>
+
+        <h2>{{ selected_area.risk }}</h2>
+        <p>Demonstration classification</p>
+    </div>
+
+</div>
+
+<!-- WEATHER SOURCE INFORMATION -->
+
+<div class="content-card" style="margin-top:20px;">
+
+    {% if weather and weather.is_live %}
+
+        <p>
+            <i class="bi bi-cloud-check"></i>
+            Data Source: <strong>{{ weather.source }}</strong>
+        </p>
+
+        <p>
+            <i class="bi bi-clock"></i>
+            Last Update: <strong>{{ weather.time }}</strong>
+        </p>
+
+        <span class="status-tag">LIVE WEATHER</span>
+
+    {% else %}
+
+        <p>Live weather is currently unavailable for this location.</p>
+
+        <span class="status-tag">WEATHER UNAVAILABLE</span>
+
+    {% endif %}
+
+</div>
+
+
+<!-- SATELLITE VEGETATION ANALYSIS -->
+<div class="content-card" style="margin-top:25px;">
+
+    <div class="card-heading">
+        <div>
+            <h3>
+                <i class="bi bi-tree"></i>
+                Satellite Vegetation Analysis
+            </h3>
+            <p>
+                Sentinel-2 satellite imagery and NDVI analysis
+            </p>
+        </div>
+
+        <span class="status-tag">SATELLITE DATA</span>
+    </div>
+
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-heading">Mean NDVI</div>
+            <h2>0.238</h2>
+            <p>Average vegetation index</p>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-heading">Vegetation Coverage</div>
+            <h2>32.54%</h2>
+            <p>NDVI greater than 0.3</p>
+        </div>
+
+    </div>
+
+    <div style="margin-top:20px;">
+        <img
+            src="{{ url_for('static', filename='images/college_road_ndvi.png') }}"
+            alt="College Road satellite NDVI vegetation map"
+            style="width:100%; max-width:800px; display:block;
+                   margin:auto; border-radius:12px;"
+        >
+    </div>
+
+    <p style="font-size:12px; color:#8290a5; margin-top:15px;">
+        Source: Sentinel-2 L2A |
+        Acquisition date: 2 October 2026 |
+        Location: College Road, Nashik
+    </p>
+
+</div>
+
+
+            <!-- AREA MAP -->
+            <div style="margin-top:30px;">
+
+                <div class="card-heading">
+
+                    <div>
+                        <h3>
+                            <i class="bi bi-map"></i>
+                            Neighbourhood Location
+                        </h3>
+
+                        <p>
+                            Geographic location of {{ selected_area.name }}
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="interactive-map"
+                     style="margin-top:15px;">
+
+                    {{ area_map | safe }}
+
+                </div>
+
+            </div>
+
+            <!-- COOLING RECOMMENDATIONS -->
+            <div style="margin-top:30px;">
+
+                <div class="card-heading">
+
+                    <div>
+                        <h3>
+                            <i class="bi bi-lightbulb"></i>
+                            Cooling Recommendations
+                        </h3>
+
+                        <p>
+                            Suggested actions based on sample risk classification
+                        </p>
+                    </div>
+
+                </div>
+
+                <div class="recommendation-list"
+                     style="margin-top:15px;">
+
+                    {% for recommendation in recommendations %}
+
+                    <div class="recommendation-item">
+
+                        <i class="bi bi-check-circle"></i>
+
+                        <p>
+                            {{ recommendation }}
+                        </p>
+
+                    </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+            <!-- BACK BUTTON -->
+            <div style="margin-top:25px;">
+
+                <a href="/area-analysis?city={{ selected_city|urlencode }}"
+                   class="btn btn-outline-success">
+
+                    <i class="bi bi-arrow-left"></i>
+                    Back to All Areas
+
+                </a>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+
+            Urban Heat AI © 2026 ·
+            Climate Intelligence Platform
+
+        </footer>
+
+    </main>
+
+</div>
+
+{% endblock %}

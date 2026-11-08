@@ -1,0 +1,450 @@
+
+{% extends "base.html" %}
+
+{% block title %}AI Predictions | Urban Heat AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <i class="bi bi-leaf-fill brand-icon"></i>
+            <span>Urban Heat AI</span>
+        </div>
+
+        <div class="sidebar-label">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('main.home') }}" class="nav-link">
+                <i class="bi bi-grid-1x2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="/heat-map" class="nav-link">
+                <i class="bi bi-map"></i>
+                <span>Heat Map</span>
+            </a>
+
+            <a href="{{ url_for('main.area_analysis') }}" class="nav-link">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Area Analysis</span>
+            </a>
+
+            <a href="{{ url_for('main.predictions') }}" class="nav-link active">
+                <i class="bi bi-cpu"></i>
+                <span>AI Predictions</span>
+            </a>
+
+            <a href="{{ url_for('main.recommendations') }}" class="nav-link">
+                <i class="bi bi-lightbulb"></i>
+                <span>Recommendations</span>
+            </a>
+
+            <a href="{{ url_for('main.reports') }}" class="nav-link">
+                <i class="bi bi-file-earmark-text"></i>
+                <span>Reports</span>
+            </a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+            <div class="sidebar-label">SYSTEM</div>
+
+            <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+
+            <div class="project-version">Urban Heat AI v1.0</div>
+        </div>
+
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <header class="topbar">
+            <div>
+                <h2>AI Heat Predictions</h2>
+                <p>Predict neighbourhood heat-risk using live weather and environmental data.</p>
+            </div>
+        </header>
+
+        <!-- INTRODUCTION -->
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-cpu"></i>
+                        Random Forest Prediction Engine
+                    </h3>
+                    <p>Experimental machine-learning heat-risk classification</p>
+                </div>
+
+                <span class="status-tag">PROTOTYPE MODEL</span>
+            </div>
+
+            <p>
+                Select a city and neighbourhood to retrieve live weather
+                conditions and estimate its heat-risk category.
+            </p>
+
+            <p style="font-size:12px;color:#8290a5;">
+                This model was trained on synthetic demonstration data.
+                Its predictions are not validated real-world heat-risk assessments.
+            </p>
+
+        </section>
+
+        <!-- LOCATION SELECTION -->
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-geo-alt"></i>
+                        Select Location
+                    </h3>
+                    <p>Choose the city and neighbourhood to analyse.</p>
+                </div>
+            </div>
+
+            <form method="GET" action="{{ url_for('main.predictions') }}">
+
+                <div class="stats-grid">
+
+                    <div class="stat-card">
+                        <div class="stat-heading">Select City</div>
+
+                        <select name="city" class="form-control"
+                                onchange="this.form.submit()">
+
+                            {% for city in cities %}
+                            <option value="{{ city }}"
+                                {% if city == selected_city %}selected{% endif %}>
+                                {{ city }}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-heading">Select Neighbourhood</div>
+
+                        <select name="area" class="form-control" required>
+
+                            <option value="">Choose neighbourhood</option>
+
+                            {% for location in locations %}
+                            <option value="{{ location.name }}"
+                                {% if location.name == selected_area_name %}selected{% endif %}>
+                                {{ location.name }}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                </div>
+
+                <div style="margin-top:20px;">
+                    <button type="submit" class="btn btn-success">
+                        Load Live Weather
+                    </button>
+                </div>
+
+            </form>
+
+        </section>
+
+        <!-- LIVE WEATHER -->
+        {% if selected_area %}
+
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-cloud-sun"></i>
+                        Live Weather Conditions
+                    </h3>
+                    <p>{{ selected_area.name }}, {{ selected_city }}</p>
+                </div>
+
+                {% if weather and weather.is_live %}
+                    <span class="status-tag">LIVE WEATHER</span>
+                {% else %}
+                    <span class="status-tag">UNAVAILABLE</span>
+                {% endif %}
+            </div>
+
+            {% if weather and weather.is_live %}
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-heading">Temperature</div>
+                    <h2>{{ weather.temperature }}°C</h2>
+                    <p>Live air temperature</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-heading">Feels Like</div>
+                    <h2>{{ weather.feels_like }}°C</h2>
+                    <p>Apparent temperature</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-heading">Humidity</div>
+                    <h2>{{ weather.humidity }}%</h2>
+                    <p>Relative humidity</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-heading">Wind Speed</div>
+                    <h2>{{ weather.wind_speed }} km/h</h2>
+                    <p>Current wind speed</p>
+                </div>
+
+            </div>
+
+            <p style="margin-top:20px;">
+                Data Source: <strong>{{ weather.source }}</strong>
+                <br>
+                Last Update: <strong>{{ weather.time }}</strong>
+            </p>
+
+            {% else %}
+
+            <p>Live weather is unavailable. Please try again later.</p>
+
+            {% endif %}
+
+        </section>
+
+        <!-- ENVIRONMENTAL INPUTS -->
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-sliders"></i>
+                        Environmental Parameters
+                    </h3>
+                    <p>Provide the remaining environmental information.</p>
+                </div>
+            </div>
+
+            {% if weather and weather.is_live %}
+
+            <form method="POST" action="{{ url_for('main.predictions') }}">
+
+                <input type="hidden" name="city" value="{{ selected_city }}">
+                <input type="hidden" name="area" value="{{ selected_area_name }}">
+
+                <div class="stats-grid">
+
+                    <!-- VEGETATION -->
+                    <div class="stat-card">
+                        <div class="stat-heading">
+                            Vegetation Coverage (%)
+                            <i class="bi bi-tree"></i>
+                        </div>
+
+                        <input type="number"
+                               class="form-control"
+                               name="vegetation"
+                               min="5"
+                               max="80"
+                               step="0.1"
+                               value="{{ form_values.vegetation }}"
+                               required>
+
+                        <p>Allowed range: 5–80%</p>
+                    </div>
+
+                    <!-- BUILT-UP DENSITY -->
+                    <div class="stat-card">
+                        <div class="stat-heading">
+                            Built-up Density (%)
+                            <i class="bi bi-buildings"></i>
+                        </div>
+
+                        <input type="number"
+                               class="form-control"
+                               name="built_up_density"
+                               min="10"
+                               max="100"
+                               step="0.1"
+                               value="{{ form_values.built_up_density }}"
+                               required>
+
+                        <p>Allowed range: 10–100%</p>
+                    </div>
+
+                </div>
+
+                <p style="font-size:12px;color:#8290a5;margin-top:15px;">
+                    Temperature, humidity and wind speed will be taken
+                    automatically from the live weather service.
+                    Vegetation and built-up density are manual inputs for now.
+                </p>
+
+                <div style="margin-top:24px;">
+
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="bi bi-cpu"></i>
+                        Predict Heat Risk
+                    </button>
+
+                </div>
+
+            </form>
+
+            {% endif %}
+
+        </section>
+
+        {% else %}
+
+        <section class="content-card" style="margin-bottom:24px;">
+            <p>
+                <i class="bi bi-info-circle"></i>
+                Select a neighbourhood above to load its live weather
+                and enable AI predictions.
+            </p>
+        </section>
+
+        {% endif %}
+
+        <!-- ERROR MESSAGE -->
+        {% if error %}
+
+        <section class="content-card" style="margin-bottom:24px;">
+            <p style="color:#dc3545;">
+                <i class="bi bi-exclamation-circle"></i>
+                {{ error }}
+            </p>
+        </section>
+
+        {% endif %}
+
+        <!-- PREDICTION RESULTS -->
+        {% if prediction %}
+
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+                <div>
+                    <h3>
+                        <i class="bi bi-graph-up-arrow"></i>
+                        Prediction Results
+                    </h3>
+                    <p>Random Forest model output</p>
+                </div>
+
+                <span class="status-tag">EXPERIMENTAL OUTPUT</span>
+            </div>
+
+            <div class="stats-grid">
+
+                <div class="stat-card">
+                    <div class="stat-heading">Predicted Heat Risk</div>
+
+                    <h2 class="
+                        {% if prediction.risk == 'High' %}
+                            risk-high
+                        {% elif prediction.risk == 'Medium' %}
+                            risk-medium
+                        {% else %}
+                            risk-low
+                        {% endif %}
+                    ">
+                        {{ prediction.risk }}
+                    </h2>
+
+                    <p>Predicted classification</p>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-heading">Model Confidence</div>
+                    <h2>{{ prediction.confidence }}%</h2>
+                    <p>Estimated class probability</p>
+                </div>
+
+            </div>
+
+            <!-- PROBABILITY DISTRIBUTION -->
+            <div style="margin-top:28px;">
+
+                <h3>Risk Probability Distribution</h3>
+
+                {% for level in ['High', 'Medium', 'Low'] %}
+
+                <div style="margin-top:18px;">
+
+                    <div style="display:flex;justify-content:space-between;">
+                        <strong>{{ level }} Risk</strong>
+
+                        <strong>
+                            {{ prediction.probabilities.get(level, 0) }}%
+                        </strong>
+                    </div>
+
+                    <div class="risk-bar" style="margin-top:8px;">
+
+                        <div class="
+                            bar-fill
+                            {% if level == 'High' %}
+                                high-fill
+                            {% elif level == 'Medium' %}
+                                medium-fill
+                            {% else %}
+                                low-fill
+                            {% endif %}
+                        "
+                        style="width:{{ prediction.probabilities.get(level, 0) }}%">
+                        </div>
+
+                    </div>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            <!-- MODEL INFORMATION -->
+            <div style="margin-top:28px;padding:16px;background:var(--card-bg);border-radius:12px;">
+
+                <p><strong>Model:</strong> {{ prediction.model_type }}</p>
+
+                <p><strong>Training data:</strong> Synthetic demonstration data</p>
+
+                <p style="font-size:12px;color:#8290a5;">
+                    These are model estimates, not validated probabilities
+                    of real-world heat events.
+                </p>
+
+            </div>
+
+        </section>
+
+        {% endif %}
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            Urban Heat AI © 2026 · Climate Intelligence Platform
+        </footer>
+
+    </main>
+
+</div>
+
+{% endblock %}

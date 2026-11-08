@@ -1,0 +1,566 @@
+
+{% extends "base.html" %}
+
+{% block title %}Urban Heat AI | Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <i class="bi bi-leaf-fill brand-icon"></i>
+            <span>Urban Heat AI</span>
+        </div>
+
+        <div class="sidebar-label" data-i18n="workspace">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+    <a href="{{ url_for('main.home') }}"
+       class="nav-link {% if request.endpoint == 'main.home' %}active{% endif %}">
+        <i class="bi bi-grid-1x2"></i>
+        <span data-i18n="dashboard">Dashboard</span>
+    </a>
+
+    <a href="{{ url_for('main.heat_map') }}"
+       class="nav-link {% if request.endpoint == 'main.heat_map' %}active{% endif %}">
+        <i class="bi bi-map"></i>
+        <span data-i18n="heatmap">Heat Map</span>
+    </a>
+
+    <a href="{{ url_for('main.area_analysis') }}"
+       class="nav-link {% if request.endpoint == 'main.area_analysis' %}active{% endif %}">
+        <i class="bi bi-bar-chart-line"></i>
+        <span data-i18n="analysis">Area Analysis</span>
+    </a>
+
+    <a href="{{ url_for('main.predictions') }}"
+       class="nav-link {% if request.endpoint == 'main.predictions' %}active{% endif %}">
+        <i class="bi bi-cpu"></i>
+        <span data-i18n="predictions">AI Predictions</span>
+    </a>
+
+    <a href="{{ url_for('main.recommendations') }}"
+       class="nav-link {% if request.endpoint == 'main.recommendations' %}active{% endif %}">
+        <i class="bi bi-lightbulb"></i>
+        <span data-i18n="recommendations">Recommendations</span>
+    </a>
+
+    <a href="{{ url_for('main.reports') }}"
+       class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}">
+        <i class="bi bi-file-earmark-text"></i>
+        <span>Reports</span>
+    </a>
+
+</nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-label" data-i18n="system">SYSTEM</div>
+
+            <!-- Settings page not implemented yet -->
+            <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <span data-i18n="settings">Settings</span>
+            </a>
+
+            <div class="project-version">Urban Heat AI v1.0</div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div>
+                <h2 data-i18n="dashboard">Dashboard</h2>
+
+                <p data-i18n="welcome">
+                    Welcome to your climate intelligence platform.
+                </p>
+            </div>
+
+            <div class="topbar-actions">
+
+                <!-- LANGUAGE SELECTOR -->
+                <select id="languageSelect"
+                        class="control-select"
+                        aria-label="Select language">
+
+                    <option value="en">English</option>
+                    <option value="mr">मराठी</option>
+                    <option value="hi">हिन्दी</option>
+
+                </select>
+
+                <!-- DARK MODE -->
+                <button id="themeToggle"
+                        class="theme-button"
+                        type="button"
+                        aria-label="Toggle dark mode">
+
+                    <i id="themeIcon" class="bi bi-moon-stars"></i>
+
+                </button>
+
+            </div>
+
+        </header>
+
+
+        <!-- LOCATION SECTION -->
+        <section class="location-section">
+
+            <div>
+
+                <span class="section-label" data-i18n="location">
+                    SELECTED LOCATION
+                </span>
+
+                <h3>
+                    <i class="bi bi-geo-alt-fill"></i>
+
+                    <span id="selectedCityName">
+                        {{ selected_city }}, Maharashtra
+                    </span>
+                </h3>
+
+                <p>Live city weather · Demonstration area data</p>
+
+            </div>
+
+
+            <!-- CITY SELECTOR -->
+            <select class="control-select"
+                    id="citySelect"
+                    aria-label="Select city"
+                    onchange="window.location.href='/?city=' + encodeURIComponent(this.value)">
+
+                <option value="Nashik"
+                    {% if selected_city == "Nashik" %}selected{% endif %}>
+                    Nashik
+                </option>
+
+                <option value="Pune"
+                    {% if selected_city == "Pune" %}selected{% endif %}>
+                    Pune
+                </option>
+
+                <option value="Mumbai"
+                    {% if selected_city == "Mumbai" %}selected{% endif %}>
+                    Mumbai
+                </option>
+
+                <option value="Nagpur"
+                    {% if selected_city == "Nagpur" %}selected{% endif %}>
+                    Nagpur
+                </option>
+
+            </select>
+
+        </section>
+
+
+<!-- CURRENT WEATHER -->
+<section class="content-card weather-overview">
+
+    <div class="card-heading">
+
+        <div>
+            <h3>
+                <i class="bi bi-cloud-sun"></i>
+                Current Weather
+            </h3>
+
+            <p>Live atmospheric conditions in {{ selected_city }}</p>
+        </div>
+
+        {% if weather_is_live %}
+            <span class="status-tag"
+                  style="background:#e6f6ed;color:#087b43;">
+                <i class="bi bi-broadcast"></i>
+                LIVE WEATHER
+            </span>
+        {% else %}
+            <span class="status-tag"
+                  style="background:#fff0e5;color:#c45b16;">
+                <i class="bi bi-exclamation-circle"></i>
+                DEMO FALLBACK
+            </span>
+        {% endif %}
+
+    </div>
+
+    <div class="weather-source-row">
+
+        <div>
+            <i class="bi bi-database"></i>
+            Data source:
+            <strong>{{ weather_source }}</strong>
+        </div>
+
+        <div>
+            <i class="bi bi-clock"></i>
+
+            {% if weather_time and weather_time != "Sample data" %}
+                Updated: <strong>{{ weather_time }}</strong>
+            {% else %}
+                Live weather currently unavailable
+            {% endif %}
+        </div>
+
+    </div>
+
+    <div class="weather-highlight">
+
+        <div>
+            <span class="weather-highlight-label">
+                CITY TEMPERATURE
+            </span>
+
+            <div class="weather-highlight-value">
+                {% if temperature is not none %}
+                    {{ temperature }}°C
+                {% else %}
+                    N/A
+                {% endif %}
+            </div>
+
+            <p>Current air temperature</p>
+        </div>
+
+        <div class="weather-highlight-icon">
+            <i class="bi bi-thermometer-half"></i>
+        </div>
+
+    </div>
+
+</section>
+
+<section class="stats-grid">
+
+            <!-- FEELS LIKE -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Feels Like</span>
+                    <i class="bi bi-thermometer-sun"></i>
+                </div>
+
+                <h2>
+                    {% if feels_like is not none %}
+                        {{ feels_like }}°C
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </h2>
+
+                <p>Apparent temperature</p>
+
+            </div>
+
+
+            <!-- HUMIDITY -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Humidity</span>
+                    <i class="bi bi-droplet"></i>
+                </div>
+
+                <h2>
+                    {% if humidity is not none %}
+                        {{ humidity }}%
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </h2>
+
+                <p>Relative air humidity</p>
+
+            </div>
+
+
+            <!-- WIND SPEED -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Wind Speed</span>
+                    <i class="bi bi-wind"></i>
+                </div>
+
+                <h2>
+                    {% if wind_speed is not none %}
+                        {{ wind_speed }} km/h
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </h2>
+
+                <p>Current wind speed</p>
+
+            </div>
+
+
+            <!-- HEAT RISK -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span data-i18n="riskLevel">Heat Risk Level</span>
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+
+                <h2 class="
+                    {% if risk_level == 'High' %}
+                        risk-high
+                    {% elif risk_level == 'Medium' %}
+                        risk-medium
+                    {% else %}
+                        risk-low
+                    {% endif %}
+                ">
+
+                    {{ risk_level }}
+
+                </h2>
+
+                <p>Demonstration risk classification</p>
+
+            </div>
+
+
+            <!-- VEGETATION -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span data-i18n="vegetation">Vegetation Coverage</span>
+                    <i class="bi bi-tree"></i>
+                </div>
+
+                <h2>{{ vegetation }}%</h2>
+
+                <p>Sample green coverage</p>
+
+            </div>
+
+
+            <!-- HIGH RISK AREAS -->
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span data-i18n="hotspots">High Risk Areas</span>
+                    <i class="bi bi-fire"></i>
+                </div>
+
+                <h2>{{ high_risk_count }}</h2>
+
+                <p>Sample identified locations</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- MAP AND RISK DISTRIBUTION -->
+        <section class="content-grid">
+
+            <!-- INTERACTIVE HEAT MAP -->
+            <div class="content-card map-card">
+
+                <div class="card-heading">
+
+                    <div>
+
+                        <h3 data-i18n="heatmap">Heat Map</h3>
+
+                        <p data-i18n="mapDescription">
+                            Urban heat-risk visualization
+                        </p>
+
+                    </div>
+
+                    <span class="status-tag">SAMPLE AREA DATA</span>
+
+                </div>
+
+
+                <div class="interactive-map">
+                    {{ map_html | safe }}
+                </div>
+
+            </div>
+
+
+
+<!-- RISK DISTRIBUTION -->
+<div class="content-card risk-distribution-card">
+
+    <div class="card-heading">
+        <div>
+            <h3 data-i18n="riskDistribution">
+                Risk Distribution
+            </h3>
+            <p data-i18n="riskDescription">
+                Sample area classification
+            </p>
+        </div>
+
+        <div class="risk-icon">
+            <i class="bi bi-pie-chart-fill"></i>
+        </div>
+    </div>
+
+    <div class="risk-summary">
+        <span>AREA RISK OVERVIEW</span>
+        <strong>{{ risk_distribution.high }}% <small>High Risk</small></strong>
+    </div>
+
+    <div class="risk-list">
+
+        <!-- LOW RISK -->
+        <div class="risk-item">
+            <div class="risk-label-row">
+                <span>
+                    <i class="bi bi-circle-fill low-dot"></i>
+                    <span data-i18n="low">Low Risk</span>
+                </span>
+                <strong>{{ risk_distribution.low }}%</strong>
+            </div>
+
+            <div class="risk-bar">
+                <div class="bar-fill low-fill"
+                     style="width: {{ risk_distribution.low }}%">
+                </div>
+            </div>
+        </div>
+
+        <!-- MEDIUM RISK -->
+        <div class="risk-item">
+            <div class="risk-label-row">
+                <span>
+                    <i class="bi bi-circle-fill medium-dot"></i>
+                    <span data-i18n="medium">Medium Risk</span>
+                </span>
+                <strong>{{ risk_distribution.medium }}%</strong>
+            </div>
+
+            <div class="risk-bar">
+                <div class="bar-fill medium-fill"
+                     style="width: {{ risk_distribution.medium }}%">
+                </div>
+            </div>
+        </div>
+
+        <!-- HIGH RISK -->
+        <div class="risk-item">
+            <div class="risk-label-row">
+                <span>
+                    <i class="bi bi-circle-fill high-dot"></i>
+                    <span data-i18n="high">High Risk</span>
+                </span>
+                <strong>{{ risk_distribution.high }}%</strong>
+            </div>
+
+            <div class="risk-bar">
+                <div class="bar-fill high-fill"
+                     style="width: {{ risk_distribution.high }}%">
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="risk-footer">
+        <i class="bi bi-info-circle"></i>
+        Based on demonstration area classifications.
+    </div>
+
+</div>
+
+
+
+        <!-- AI RECOMMENDATIONS -->
+        <section class="content-card recommendation-card">
+
+            <div class="card-heading">
+
+                <div>
+
+                    <h3 data-i18n="recommendations">
+                        AI Recommendations
+                    </h3>
+
+                    <p data-i18n="recommendationDescription">
+                        Suggested actions for urban cooling
+                    </p>
+
+                </div>
+
+                <i class="bi bi-cpu"></i>
+
+            </div>
+
+
+            <div class="recommendation-list">
+
+                <div class="recommendation-item">
+
+                    <i class="bi bi-tree"></i>
+
+                    <p data-i18n="recommendationOne">
+                        Increase tree plantation in high-risk areas.
+                    </p>
+
+                </div>
+
+
+                <div class="recommendation-item">
+
+                    <i class="bi bi-building"></i>
+
+                    <p data-i18n="recommendationTwo">
+                        Promote cool roofs on buildings.
+                    </p>
+
+                </div>
+
+
+                <div class="recommendation-item">
+
+                    <i class="bi bi-flower1"></i>
+
+                    <p data-i18n="recommendationThree">
+                        Develop green spaces and urban gardens.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+
+            Urban Heat AI © 2026 ·
+
+            <span data-i18n="footer">
+                Climate Intelligence Platform
+            </span>
+
+        </footer>
+
+    </main>
+
+</div>
+
+{% endblock %}

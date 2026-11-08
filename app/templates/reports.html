@@ -1,0 +1,475 @@
+
+{% extends "base.html" %}
+
+{% block title %}Climate Reports | Urban Heat AI{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-wrapper">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+        <div class="brand">
+            <i class="bi bi-leaf-fill brand-icon"></i>
+            <span>Urban Heat AI</span>
+        </div>
+
+        <div class="sidebar-label">WORKSPACE</div>
+
+        <nav class="sidebar-nav">
+
+            <a href="{{ url_for('main.home') }}" class="nav-link">
+                <i class="bi bi-grid-1x2"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <a href="{{ url_for('main.heat_map') }}" class="nav-link">
+                <i class="bi bi-map"></i>
+                <span>Heat Map</span>
+            </a>
+
+            <a href="{{ url_for('main.area_analysis') }}" class="nav-link">
+                <i class="bi bi-bar-chart-line"></i>
+                <span>Area Analysis</span>
+            </a>
+
+            <a href="{{ url_for('main.predictions') }}" class="nav-link">
+                <i class="bi bi-cpu"></i>
+                <span>AI Predictions</span>
+            </a>
+
+            <a href="{{ url_for('main.recommendations') }}" class="nav-link">
+                <i class="bi bi-lightbulb"></i>
+                <span>Recommendations</span>
+            </a>
+
+            <a href="{{ url_for('main.reports') }}"
+   class="nav-link {% if request.endpoint == 'main.reports' %}active{% endif %}">
+    <i class="bi bi-file-earmark-text"></i>
+    <span>Reports</span>
+</a>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-label">SYSTEM</div>
+
+            <a href="#" class="nav-link">
+                <i class="bi bi-gear"></i>
+                <span>Settings</span>
+            </a>
+
+            <div class="project-version">Urban Heat AI v1.0</div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+        <!-- TOPBAR -->
+        <header class="topbar">
+
+            <div>
+                <h2>Climate Reports</h2>
+                <p>Urban heat-risk insights and city-wise reports.</p>
+            </div>
+
+        </header>
+
+
+        <!-- CITY SELECTION -->
+        <section class="location-section">
+
+            <div>
+
+                <span class="section-label">REPORT LOCATION</span>
+
+                <h3>
+                    <i class="bi bi-geo-alt-fill"></i>
+                    {{ selected_city }}, Maharashtra
+                </h3>
+
+                <p>Climate intelligence report overview</p>
+
+            </div>
+
+            <form method="GET"
+                  action="{{ url_for('main.reports') }}">
+
+                <select name="city"
+                        class="control-select"
+                        onchange="this.form.submit()">
+
+                    {% for city in cities %}
+
+                    <option value="{{ city }}"
+                        {% if city == selected_city %}selected{% endif %}>
+                        {{ city }}
+                    </option>
+
+                    {% endfor %}
+
+                </select>
+
+            </form>
+
+        </section>
+
+
+        <!-- REPORT HEADER -->
+        <section class="content-card" style="margin-bottom:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-file-earmark-bar-graph"></i>
+                        Urban Heat Risk Assessment
+                    </h3>
+
+                    <p>
+                        City-level demonstration dataset and risk assessment.
+                    </p>
+                </div>
+
+                <span class="status-tag">CLIMATE REPORT</span>
+
+            </div>
+
+            <div style="display:flex;
+                        justify-content:space-between;
+                        flex-wrap:wrap;
+                        gap:15px;
+                        margin-top:20px;">
+
+                <div>
+                    <span class="section-label">CITY</span>
+                    <h4>{{ selected_city }}</h4>
+                </div>
+
+                <div>
+                    <span class="section-label">TOTAL AREAS ANALYSED</span>
+                    <h4>{{ total_areas }}</h4>
+                </div>
+
+                <div>
+                    <span class="section-label">REPORT DATE</span>
+                    <h4>{{ report_date }}</h4>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RISK SUMMARY -->
+        <section class="stats-grid">
+
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Total Areas</span>
+                    <i class="bi bi-geo-alt"></i>
+                </div>
+
+                <h2>{{ total_areas }}</h2>
+
+                <p>Areas included in the dataset</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>High Risk</span>
+                    <i class="bi bi-exclamation-triangle"
+                       style="color:#dc3545;"></i>
+                </div>
+
+                <h2>{{ high_count }}</h2>
+
+                <p>Demonstration high-risk areas</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Medium Risk</span>
+                    <i class="bi bi-exclamation-circle"
+                       style="color:#e6a000;"></i>
+                </div>
+
+                <h2>{{ medium_count }}</h2>
+
+                <p>Demonstration medium-risk areas</p>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-heading">
+                    <span>Low Risk</span>
+                    <i class="bi bi-check-circle"
+                       style="color:#198754;"></i>
+                </div>
+
+                <h2>{{ low_count }}</h2>
+
+                <p>Demonstration low-risk areas</p>
+
+            </div>
+
+        </section>
+
+
+        <!-- RISK DISTRIBUTION -->
+        <section class="content-card" style="margin-top:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-bar-chart-line"></i>
+                        Risk Distribution
+                    </h3>
+
+                    <p>Neighbourhood classification in {{ selected_city }}</p>
+                </div>
+
+                <span class="status-tag">AREA ANALYSIS</span>
+
+            </div>
+
+
+            <!-- LOW -->
+            <div class="risk-item">
+
+                <span>Low Risk</span>
+
+                <div class="risk-bar">
+                    <div class="bar-fill low-fill"
+                         style="width:{{ risk_distribution.low }}%;">
+                    </div>
+                </div>
+
+                <strong>{{ risk_distribution.low }}%</strong>
+
+            </div>
+
+
+            <!-- MEDIUM -->
+            <div class="risk-item">
+
+                <span>Medium Risk</span>
+
+                <div class="risk-bar">
+                    <div class="bar-fill medium-fill"
+                         style="width:{{ risk_distribution.medium }}%;">
+                    </div>
+                </div>
+
+                <strong>{{ risk_distribution.medium }}%</strong>
+
+            </div>
+
+
+            <!-- HIGH -->
+            <div class="risk-item">
+
+                <span>High Risk</span>
+
+                <div class="risk-bar">
+                    <div class="bar-fill high-fill"
+                         style="width:{{ risk_distribution.high }}%;">
+                    </div>
+                </div>
+
+                <strong>{{ risk_distribution.high }}%</strong>
+
+            </div>
+
+        </section>
+
+
+        <!-- AREA-WISE REPORT -->
+        <section class="content-card" style="margin-top:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-buildings"></i>
+                        Neighbourhood Risk Details
+                    </h3>
+
+                    <p>Area-wise demonstration risk classification</p>
+                </div>
+
+                <span class="status-tag">SAMPLE DATA</span>
+
+            </div>
+
+
+            <div style="overflow-x:auto;">
+
+                <table class="table">
+
+                    <thead>
+                        <tr>
+                            <th>Neighbourhood</th>
+                            <th>Sample Temperature</th>
+                            <th>Risk Level</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for area in locations %}
+
+                        <tr>
+
+                            <td>
+                                <strong>{{ area.name }}</strong>
+                            </td>
+
+                            <td>{{ area.temp }}°C</td>
+
+                            <td>
+
+                                {% if area.risk == "High" %}
+
+                                <span class="status-tag"
+                                      style="background:#fde8e8;color:#c62828;">
+                                    HIGH
+                                </span>
+
+                                {% elif area.risk == "Medium" %}
+
+                                <span class="status-tag"
+                                      style="background:#fff3cd;color:#946200;">
+                                    MEDIUM
+                                </span>
+
+                                {% else %}
+
+                                <span class="status-tag"
+                                      style="background:#e6f6ed;color:#087b43;">
+                                    LOW
+                                </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% else %}
+
+                        <tr>
+                            <td colspan="3">
+                                No area information available.
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+
+        <!-- REPORT NOTES -->
+        <section class="content-card" style="margin-top:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-info-circle"></i>
+                        Report Interpretation
+                    </h3>
+
+                    <p>Important information about this report</p>
+                </div>
+
+            </div>
+
+            <ul style="line-height:2;">
+
+                <li>
+                    Risk classifications are based on the project's
+                    demonstration neighbourhood dataset.
+                </li>
+
+                <li>
+                    Sample temperatures are not live neighbourhood
+                    temperature measurements.
+                </li>
+
+                <li>
+                    City-level weather data and sample area data
+                    are separate sources.
+                </li>
+
+                <li>
+                    The AI prediction model uses synthetic training
+                    data and requires real-world validation.
+                </li>
+
+            </ul>
+
+        </section>
+
+
+        <!-- PDF DOWNLOAD - CONNECTED IN NEXT STEP -->
+        <section class="content-card" style="margin-top:24px;">
+
+            <div class="card-heading">
+
+                <div>
+                    <h3>
+                        <i class="bi bi-file-pdf"></i>
+                        Export Climate Report
+                    </h3>
+
+                    <p>
+                        Download a printable city-wise climate report.
+                    </p>
+                </div>
+
+            </div>
+
+            <a href="{{ url_for('main.download_report', city=selected_city) }}"
+   class="btn btn-success">
+
+    <i class="bi bi-download"></i>
+    Download PDF Report
+
+</a>
+
+        </section>
+
+
+        <!-- FOOTER -->
+        <footer class="dashboard-footer">
+            Urban Heat AI © 2026 · Climate Intelligence Platform
+        </footer>
+
+    </main>
+
+</div>
+
+{% endblock %}
